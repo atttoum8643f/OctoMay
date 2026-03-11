@@ -46,6 +46,8 @@ Enfin, les outils méthodologique qui seront développés les résultats obtenus
 
   - notes/ : contient les documents PDF générés à partir des fichiers R Markdown.
 
+  - archive/ : contient les enciens documents, fichiers et figures
+
   - vis/ : contient les éléments visuels utilisés dans le projet.
 
   - logo/ : logos utilisés dans les documents.
