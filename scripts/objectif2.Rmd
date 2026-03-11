@@ -1,0 +1,1050 @@
+---
+output:
+  pdf_document:
+fontsize: 12pt
+mainfont: "Times New Roman"
+
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage[table]{xcolor}
+  - \usepackage{graphicx}
+  - \usepackage{tcolorbox}
+  - \usepackage{lscape}
+  - \usepackage{booktabs}
+  - \usepackage{tikz}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[T1]{fontenc}
+  - \usepackage[french]{babel}
+  - \usepackage{amsmath,amsfonts,amssymb}
+  - \usepackage{fancyhdr}
+  - \usepackage{enumitem}
+
+  - \setlength{\headheight}{15.35403pt}
+  - \addtolength{\topmargin}{-2.5pt}
+
+  - \pagestyle{fancy}
+  - \fancyhead[L]{\textcolor{purple}{Objectif 2}}
+  - \fancyhead[C]{\textcolor{purple}{Exploration et compréhension des données}}
+  - \fancyhead[R]{\textcolor{purple}{2025 \textbf{-} 2026}}
+  - \fancyfoot[C]{\thepage}
+
+  - \renewcommand{\contentsname}{Table des matières}
+
+  - \definecolor{bleu}{RGB}{85, 37, 130}
+  - \definecolor{navy}{RGB}{3, 34, 76}
+  - \definecolor{picker}{RGB}{235, 153, 30}
+  - \definecolor{cafe}{RGB}{70, 46, 1}
+  - \definecolor{olive}{RGB}{112, 141, 35}
+  - \definecolor{ponceau}{RGB}{198, 8, 0}
+  - \definecolor{vert}{RGB}{6, 106, 9}
+  - \definecolor{nacarat}{RGB}{252, 93, 93}
+  - \definecolor{ambre}{RGB}{240, 195, 0}
+---
+\begin{titlepage}
+\begin{center}
+
+% Logo
+\vfill
+\noindent
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=\linewidth]{vis/cufr.png}\\[2cm]
+\end{minipage}
+\hfill
+\begin{minipage}{0.26\textwidth}
+\includegraphics[width=\linewidth]{vis/imag.png}\\[2cm]
+\end{minipage}
+
+% Université et département
+{\Large \textsc{Université de Mayotte}}\\[0.cm]
+{\large \textcolor{red}{Département de Mathématiques}}\\[1.5cm]
+
+% Encadré du titre
+\tcbset{
+  colback=vert!20,
+  colframe=red,
+  width=\textwidth,
+  arc=3mm,
+  boxrule=0.8mm
+}
+
+\begin{tcolorbox}
+  \centering
+  {\huge \bfseries Sujet:  Modélisation spatio-temporelle de l’abondance des poulpes à Mayotte }\\[0.2cm]
+  {\large \textit{Objectif 2 : Exploration et compréhension des données}}
+\end{tcolorbox}
+
+\vfill
+
+% Auteur
+\begin{flushright}
+\textbf{Réalisé par :}\\
+ATTOUMANI Ibrahim
+\end{flushright}
+
+\vfill
+
+% Logo bas de page
+\noindent
+\begin{minipage}{0.3\textwidth}
+  \includegraphics[width=\linewidth]{vis/ssd_biostat.png}
+\end{minipage}
+
+\vspace{0.5cm}
+
+{\Large Année Universitaire 2025 -- 2026}
+
+\end{center}
+\end{titlepage}
+
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+
+# \textcolor{cafe}{1. Nettoyage des données}
+
+Le nettoyage des données est la première étape de l'analyse des données. Cette étape est essentielle et permet d'améliorer la qualité des données avant la modélisation. Il consiste à détecter, corriger voire supprimer des données incorrectes, incohérentes ou dupliquées. Il existe plusieurs problèmes courants dans les données, notamment la gestion des valeurs manquantes, les erreurs de format, la détection des outliers (valeurs atypique ou aberrantes).
+
+## \textcolor{cafe}{1.1. Importation des données}
+
+```{r, include=FALSE, echo=FALSE, warning=FALSE}
+# les packages nécessaires
+
+# gerer les donnees
+library(dplyr) # (mutate, select, filter...)
+
+# gerer les date ou heure
+library(lubridate) # (hm, dmy...)
+
+# pour l'affichage de graphique elegant
+library(ggplot2)
+
+# Afficher une visualisation des correlations
+library(corrplot)
+
+# Analyse de données multidimentionnelle
+library(FactoMineR) # ACP, ACM...
+
+# mettre deux graphes cote a cote
+library(cowplot)
+
+# changer le format d'un tableau
+library(reshape2) 
+```
+
+
+
+```{r}
+# importation des données
+# Attention: il faut penser à changer le chemin vers les données si nécessaire
+
+dt <- read.csv("data/Octopus_data.csv", header = TRUE, sep = ",")
+```
+
+Le jeu de données contient $372$ observations et $77$ variables. Il comprend différents types de variables:
+
+\begin{itemize}[label=\textbullet]
+  \item Quantitatives continues
+  \item Catégorielles
+  \item Temporelle (dates, heures)
+\end{itemize}
+
+On remarque que les variables temporelles sont codées en caractères. Nous allons donc les convertir au  format approprié (date,heure,minute). 
+
+```{r, echo=FALSE}
+# Conversion en date/heure
+
+# Colonnes avec date + heure
+dt$Date.de.creation <- dmy_hms(dt$Date.de.creation)  
+dt$Date.de.modification <- dmy_hms(dt$Date.de.modification)
+
+# dmy_hms -> date-mois-annee heure:minute:seconde
+
+# Colonne avec date seulement
+dt$datesortie <- ymd(dt$datesortie)
+
+# convertir toutes les heure en minutes
+col_heures <- c("heuredebut", "heurefin", "heuremareebasse", "heuredebutenq")
+
+# charactereq -> heures
+df <- dt %>%
+  mutate(across(all_of(col_heures), hm))
+
+# heures -> minutes
+df <- df %>%
+  mutate(across(all_of(col_heures), ~
+                  as.numeric(.x, "minutes")))
+
+```
+
+
+Il existe également des variables nominales (num.individus, num.pechejour, num.pratiquejour) qui sont codées sous forme numérique.
+
+```{r}
+# variables nominales qui sont sous forme numerique
+var_nom <- c("num.individus", "num.pechejour", "num.pratiquejour")
+
+for (c in var_nom) {
+  df[[c]] <- as.character(df[[c]])
+}
+```
+
+Nous coderons ensuite d'autres variables dérivées, telles que la durée, latitude/longitude (séparation des points GPS).
+
+```{r}
+# la duree sera en minute
+df$duree <- df$heurefin - df$heuredebut
+
+df$heurefinenq <- df$heuredebutenq + df$dureeenq
+```
+
+
+```{r, echo=FALSE}
+# les noms des coordonees gps
+gps <- c("gpsdebut", "gpsfin", "gpsenq")
+
+for (i in 1:3) {
+  vec <- c("debut", "fin", "enq")
+  latlong <- do.call(rbind, strsplit(df[[gps[i]]], ","))  # sépare les valeurs
+  
+  df[[paste0("lat_",vec[i])]] <- as.numeric(latlong[,1])
+  df[[paste0("lon_",vec[i])]] <- as.numeric(latlong[,2])
+}
+
+df <- df[,!names(df) %in% gps]
+```
+
+## \textcolor{cafe}{1.2. Gestion des valeurs manquantes}
+
+# \textcolor{cafe}{2. Analyses descriptives univariées}
+
+On sépare les données en trois tableaux:
+
+\begin{itemize}[label=\textbullet]
+  \item \textbf{df\_quant} contiendra toutes les variables quantitatives;
+  \item \textbf{df\_qual} contiendra toutes les variables qualitatives;
+  \item \textbf{df\_temp} contiendra toutes les variables temporelles.
+\end{itemize}
+
+
+```{r, echo=FALSE}
+# Toutes les colonnes qui sont de type Date
+noms_temps <- c("Date.de.creation",
+                "Date.de.modification",
+                "datesortie")
+df_temp <- df[, noms_temps]
+
+# Deux tableaux selon le type (Quanti, Quali)
+df_quant <- df[, sapply(df, is.numeric)]
+df_qual <- df[, !names(df) %in% names(df_quant) & 
+                !names(df) %in% names(df_temp)]
+
+```
+
+Dans un premier temps, on s'intéresse aux données quantitatives (df_quant). 
+
+Ce tableau comprend 23 variables, toutes quantitatives comme indiqué. On distingue deux types de variables quantitatives, discrète telle que nbhommespec et continue comme la taille.
+
+```{r, echo=FALSE}
+# les variables quantitatives sans la variable codeenquete
+df_quant <- df_quant[, !names(df_quant) %in% c("codeenquete","NA.")]
+
+noms_quant <- names(df_quant) # noms des vars quantitatives
+```
+
+## \textcolor{cafe}{2.1. Les premières graphiques: Histogrammes, Barplots et Boxplots}
+
+Nous allons écrire deux fonctions: l'une affichant l'histogramme de toutes les variables quantitatives continues données et qui rajoute sur le même graphe la densité de celles-ci. L'autre fonction affiche le boxplot d'une variable. 
+
+Nous décrirons en détail les paramètres de chaque fonction en Annexe. Ce choix me paraît judicieux pour alléger la rédaction (ne pas réécrire un code plusieurs fois ) car nous avons plusieurs variables à analyser
+
+```{r, echo=FALSE}
+# histogramme et ajout de la densite
+plt_hist_uni <- function(df, br = 20, nom = noms_quant, 
+                         xlab = "Durée (minutes)", cex = 0.9, k = 1){
+  # histograme
+  hist(df[[nom[k]]],
+     freq = F,
+     breaks = br,
+     col = "lightblue",
+     main = paste("Distribution de ",nom[k]),
+     xlab = paste(xlab), 
+     cex.main = cex)
+  
+  # la densite
+  lines(density(df[[nom[k]]], na.rm = TRUE),
+     col = "red")
+  grid()
+}
+
+```
+
+On a également programmer une troisième fonction qui affiche un barplot pour les variables discrètes.
+
+```{r, echo=FALSE}
+# barplot
+plt_bar_uni <- function(df, nom = noms_quant, 
+                        xlab = "Le nombre d'individus récoltés", 
+                        cex = 0.9, k = 1){
+    barplot(table(df[[nom[k]]]),
+     col = "lightblue",
+     main = paste("Barplot de ",nom[k]),
+     xlab = paste(xlab),
+     ylab = "Fréquence", 
+     cex.main = cex)
+  grid()
+}
+
+```
+
+
+
+```{r, echo=FALSE}
+# boxplot
+box_plt_uni <- function(df, nom = noms_quant, col = "orange", 
+                        cex = 0.9, k = 1){
+  boxplot(df[[nom[k]]],
+        col = col,
+        main = paste("Boxplot de ", nom[k]),
+        cex.main = cex)
+  grid()
+}
+
+```
+
+
+```{r figure1, fig.cap="Barplot et Boxplot du nombre d'individus récoltés", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) # mettre les deux graphe côte à côte
+# Barplot
+plt_bar_uni(df_quant)
+
+# boxplot
+box_plt_uni(df_quant)
+par(mfrow = (c(1,1)))
+
+```
+
+Le barplot affiche la fréquence du nombre d'individus récoltés. On constate que les valeurs 1, 2, 3, 4 et 9 apparaissent souvent, en revanche la valeur 5 est moins fréquente.
+
+Comme on peut l'observer dans la Figure \@ref(fig:figure1),le boxplot résume la distribution. On constate que la médiaane est autour de 3 individus. La majorité des observations sont entre 1 et 4 (intervalle interquartille). On observe également également une valeur atypique autour de 9 individus.
+
+
+```{r figure2, fig.cap="Distribution et Boxplot du poids de la récolte", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Poids de la récolte", k= 2)
+
+# boxplot
+box_plt_uni(df_quant, col = "magenta", k= 2)
+par(mfrow = (c(1,1)))
+```
+L'histogramme avec la courbe de densité (en rouge) de la Figure \@ref(fig:figure2) montre la distribution des poids récoltés. La majorité des poids se situe entre $500g$ et $2000g$, le boxplot confirme cela d'après l'intervalle interquartille. On constate une médiane autour de 1250 et 1350. On aperçoit également plusieurs mode indiquant peut-être la présence de plusieurs sous-populations.
+
+```{r figure3, fig.cap="Distribution et boxplot de la taille de l'individu (LM)", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Taille individu LM (cm)", k= 3)
+
+# boxplot
+box_plt_uni(df_quant, col = "magenta", k= 3)
+par(mfrow = (c(1,1)))
+```
+La Figure \@ref(fig:figure3) affiche la distribution de la taille de l'individu (LM). La majorité des tailles sont compris entre $13cm$ et $18cm$, où la médiane est autour de $15cm$. On peut constater une légère asymétrie à droite, causée par deux valeurs élevées rares ($25cm$ et $27cm$), visible égalment sur le boxplot. 
+
+```{r figure4, fig.cap="Distribution et Boxplot de la taille de l'individu (LT)", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Taille individu LT (cm)", k= 4)
+
+# boxplot
+box_plt_uni(df_quant, col = "magenta", k= 4)
+par(mfrow = (c(1,1)))
+```
+
+Sur la figure \@ref(fig:figure4), la plupart des tailles sont autour de $60cm$ et $100cm$. Une médiane autour de $70cm$ avec quelques atypiques, elles reste malgré plausible.
+
+```{r figure5, fig.cap="Distribution et Boxplot du poids de l'individu", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Poid de l'individu", k= 5)
+
+# boxplot
+box_plt_uni(df_quant, col = "magenta", k= 5)
+par(mfrow = (c(1,1)))
+```
+
+La distribution de la figure \@ref(fig:figure5) est asymétrique à droite. Quelques individus beaucoup plus lourd que la majorité sont visible sur le boxplot. Il me semble que ce soit des individus atypiques. La médiane me semble autour de $600g$.
+
+```{r figure6, fig.cap="Distribution et Boxplot du coefficient de la marée", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Coefficient marée", k= 6)
+
+# boxplot
+box_plt_uni(df_quant, col = "magenta", k= 6)
+par(mfrow = (c(1,1)))
+```
+
+Les valeurs sur la figure \@ref(fig:figure6) sont surtout entre $93$ et $112$ d'après l'intevalle interquartile du boxplot. La distribution est assez équilibrée, avec une médiane au alentour de $108$. On observe deux modes révélant peut-être deux sous population.
+
+```{r figure7, fig.cap="Distribution et Boxplot de la hauteur basse de la mer", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Hauteur basse de la mer", k= 7)
+
+# boxplot
+box_plt_uni(df_quant, col = "magenta", k= 7)
+par(mfrow = (c(1,1)))
+```
+
+On observe clairement sur la figure \@ref(fig:figure7) deux modes, ce qui suggère peut-être deux périodes où la hauteur basse de la mer fluctue. Ces hauteurs se situent majoritairement entre 2 cm et 4 cm et entre 4 cm et 6 cm. La médiane est d’environ 4 cm et aucune valeur extrême n’est observée.
+
+```{r figure8, fig.cap="Distribution et Boxplot de la durée de l'enquête", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Durée de l'enquête", k= 8)
+
+# boxplot
+box_plt_uni(df_quant, col = "magenta", k= 8)
+par(mfrow = (c(1,1)))
+```
+
+La majorité des durées d’enquête se situe entre $5$ et $10$ si on se fie à l'intervalle interquartille (\@ref(fig:figure7)), avec une médiane autour de $6$.
+Le boxplot montre une valeur atypique vers $20$, indiquant une enquête exceptionnellement longue.
+
+
+```{r figure17, fig.cap="Distribution et Boxplot de la durée", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Durée", k= 17)
+
+# boxplot
+box_plt_uni(df_quant, k= 17)
+par(mfrow = (c(1,1)))
+```
+
+On aperçoit sur la figure @ref(fig:figure17) la distribution de la variable dérivée durée. La majorité des valeurs se situe autour de $100$ à $140$, avec quelques valeurs extrêmes plus faibles et plus élevées visibles sur le boxplot.
+
+\newpage
+## \textcolor{cafe}{2.2. Distribution des NA et détection des outliers}
+
+Dans cette partie, nous allons examiner la distribution des valeurs manquantes des variables quantitatives. Nous tenterons ensuite de détecter d’éventuelles valeurs aberrantes par la méthode du **Z-score**.
+
+Le Z-score d'une valeur $x_i$ dans une variable X est définit:
+
+$$
+Z(x_i) = \frac{x_i - \mu}{\sigma}
+$$
+où, 
+ 
+  - $\mu = \mathbb{E}[X]$ la moyenne de  $X$.
+  - $\sigma$ l'écart-type de $X$
+
+$Z(x_i)$ mesure combien d'écart-types la valeurs $x_i$ est éloignée de la moyenne.
+
+Une valeur $x_i$ est considérée comme aberrante si $\mid Z(x_i) \mid > 3$.
+
+Quand les données ne sont pas gaussiennes, on préfère des mesures robustes de la variabilité. De ce fait, nous utiliserons un estimateur robuste de l'ecart-type : 
+
+\textcolor{navy}{MAD (Median Absolute Deviation) :}
+
+$$
+MAD = 1.483 \times median(\mid x_i - median(x_i) \mid)
+$$
+```{r, echo=FALSE}
+
+# MAD (Median Absolute Deviation)
+MAD <- function(x, c= 1.483){
+  n <- length(x)
+  
+  #  vec abs(x\_i - mediane(x))
+  re <- sapply(1:n, function(i){
+    return(abs(x[i] - median(x, na.rm = T)))
+  })
+  
+  return(c*median(re, na.rm = T))
+}
+```
+
+Le Z-score robuste est définit :
+
+$$
+Z_i^{rob} = \frac{x_i - median(x)}{\hat{\sigma}_{rob}}
+$$
+
+où $\hat{\sigma}_{rob}$ peut être **MAD** ou un autre estimateur robuste de l'écart-type.
+
+Les fonctions utilisées pour la détection des valeurs aberrantes, à savoir MAD, Z\_rob et detect\_outlier, sont décrites ici de manière conceptuelle. Leur code complet est fourni en annexe A.
+
+```{r, echo=FALSE}
+Z_rob <- function(x, s = MAD(x)){
+  n <- length(x)
+  
+  #  vec (x\_i - mediane(x))
+  re <- sapply(1:n, function(i){
+    return(x[i] - median(x, na.rm = T ))
+  })  
+  
+  return(re/s)
+}
+```
+
+
+```{r, echo=FALSE}
+# detection d'outliers (aberrantes, atypiques)
+detect_outlier <- function(df= df_quant, nom= noms_quant, k=1){
+  
+  # z-score robuste
+  z_rob <- Z_rob(df[[nom[k]]])
+
+  # Identifier les index des outliers
+  outliers <- which(abs(z_rob) > 3)
+   
+  # afficher les outliers
+  unique(df[[nom[k]]][outliers])
+}
+```
+
+
+```{r, echo=FALSE, include=FALSE}
+detect_outlier(k=3)
+detect_outlier(k=4)
+```
+
+Pour la variable *TailleindividuLM* (resp. *TailleindividuLT*), on constate que les outliers détectés, 27 et 25 (resp. 130, 148, 19 et 13), correspondent exactement à ceux affichés sur le boxplot de la figure 3 (resp. figure 4).
+
+```{r figure18, fig.cap="Barplot du nombre de NA par variable", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+# Compter les NA par variable
+na_count <- sapply(df_quant, function(x) sum(is.na(x)))
+na_df <- data.frame(variable = names(df_quant),
+                    n_na = na_count)
+
+# les variables ayant au moins un NA
+na_df <- na_df[na_df$n_na > 0, ]
+
+# Barplot 
+ggplot(na_df, aes(x = reorder(variable, -n_na), y = n_na)) +
+  geom_bar(stat = "identity", fill = "navy") +
+  labs(x = "Variables", y = "Nombre de NA") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# reorder trie les bares par nombre décroissante de NA
+```
+
+
+La figure \@ref(fig:figure10) affiche la distribution des valeurs manquantes de toutes les variables. On constate que les variables *nbenfants*, *nbfemmespec* et *poidsrecolte* ont plus de $200$ valeurs manquantes. Cela indique que ces variables sont les plus afféctées. Les autres variables présentent un nombre plus faibles de valeurs manquantes.
+
+
+\newpage
+# \textcolor{cafe}{3. Analyses descriptives bivariées}
+
+Le graphique de la **figure 11** (En annexe D) affiche la matrice de corrélation et permet d’observer les relations entre les différentes variables. Les couleurs bleues indiquent une corrélation positive, tandis que les couleurs rouges indiquent une corrélation négative.
+
+On observe notamment une corrélation positive entre le nombre d’individus récoltés et le poids de la récolte. De même, la taille et le poids des individus sont positivement corrélés. En revanche, certaines variables présentent des corrélations faibles, indiquant des relations limitées entre elles.
+
+# \textcolor{cafe}{4. Analyses descriptives multidimentionnelles}
+
+Dans cette partie, nous allons procéder à une analyse de données multidimensionnelle, à savoir l'analyse en composantes principales (ACP). Il s'avère être une bonne approche pour étudier toutes les variables en même temps. L'ACP consiste à chercher des liaisons bivariées entre les variables simultanément en réduisant le nombre de dimensions des données de départ. Autrement dit, on cherche des axes principaux qui résumeent au mieux les données tout en gardant le maximum d'information.
+
+```{r, echo=FALSE}
+# imputation par un modèle d'acp à 2 dimensions
+df_comp <- missMDA::imputePCA(df_quant, ncp=2)$completeObs
+res.PCA<-PCA(df_comp, graph=FALSE) # acp
+```
+
+Il est important de noter que dans le package **Factoshiny**, il est possible de gérer les données manquantes en ACP. Il  maximise la log-vraisemblance du modèle 
+
+$$
+x^j = \mu_j + \sum_{k=1}^K a_{jk} z^k + \epsilon^j, \text{ avec } \epsilon^j \sim \mathcal{N}(0,\sigma^2I)
+$$
+
+Ensuite, minimise le critère $\vert \vert X^c - AZ \vert \vert^2$ avec $AZ = \hat{X^c}$, et réitère le procéssus jusqu'à convergence.
+
+
+```{r, fig.cap="Le pourcentage de la variance des 10 premiere dimention", fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE, include=FALSE}
+# Valeurs propre, table et histogramme
+factoextra::fviz_screeplot(res.PCA, 
+                           addlabels = TRUE, 
+                           main =" Décomposition de l'inertie", 
+                           xlab = "Les composantes", 
+                           ylab = "variance", 
+                           ncp = 10)
+```
+
+
+```{r, fig.cap="Graphe des variables dans le plan(1,2)", fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE}
+plot.PCA(res.PCA,
+         axes=c(1,2), 
+         choix='var', 
+         habillage = 'cos2',
+         select='cos2  0.6', 
+         unselect=0, 
+         cex=0.8, 
+         cex.main=0.9, 
+         cex.axis=0.9, 
+         title="Graphe des variables de l'ACP")
+```
+
+
+```{r, fig.cap="Graphe des individus dans le plan(1,2)", fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE}
+plot.PCA(res.PCA, 
+         axes=c(1,2), 
+         select='cos2  0.7', 
+         habillage='cos2', 
+         title="Graphe des individus de l'ACP", 
+         cex=0.9, 
+         cex.main=0.9, 
+         cex.axis=0.9) 
+
+```
+
+Sur *la figure 11* les variables les mieux représentées sont *nbenfants* et le groupe *nbfemmespec, poidsrecol...*
+L’axe 1 distingue principalement les observations selon la variable *nbenfants* en opposition avec le groupe de variables *nbfemmespec, poidsrecolte, nbindividusrecole* formant un faisceau le long de cet axe. 
+
+Les individus de *la figure 12* qui sont les mieux représentés sur le plan factoriel ($cos^2$ élevés) se situent majoritairement dans le quadrant supérieur gauche. Leur position indique une association positive avec la variable *nbenfants*, située dans la même direction sur le cercle des corrélations, et une opposition aux variables *nbfemmespec, poidsrecolte, nbindividusrecole* se projettent du côté droit de l’axe 1.
+
+On constate également que le premier plan factoriel capture $40.83\%$ de l'inertie totale, ce qui signifie qu'il explique $40.83\%$ de la variabilité totale des données.
+
+```{r, fig.cap="Graphe des variables dans le plan(2,3)",fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE}
+plot.PCA(res.PCA,
+         axes=c(2,3), 
+         choix='var', 
+         habillage = 'cos2',
+         select='cos2  0.6', 
+         unselect=0, 
+         cex=0.8, 
+         cex.main=0.9, 
+         cex.axis=0.9, 
+         title="Graphe des variables de l'ACP (2,3)")
+```
+
+
+```{r, fig.cap="Graphe des individus dans le plan(2,3)",fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE}
+plot.PCA(res.PCA, 
+         axes=c(2,3), 
+         select='cos2  0.6', 
+         habillage='cos2', 
+         title="Graphe des individus de l'ACP (2,3)", 
+         cex=0.9, 
+         cex.main=0.9, 
+         cex.axis=0.9)
+
+
+```
+
+On peut voir sur *la figure 13* les variables projetées sur le plan factoriel (Dim 2, Dim 3), elle met principalement en évidence deux variables. La variable *tailleindividuLM* s’oppose à *nbpecheurrecolte* selon l’axe 2, ce qui suggère que ces deux variables contribuent fortement à la construction de cet axe et qu’elles sont négativement corrélées dans ce plan factoriel.
+
+Le graphe des individus (*la figure 14*) dans le plan (Dim 2, Dim 3) montre que les observations sont majoritairement réparties le long de l’axe 2, indiquant que la variabilité entre individus est principalement expliquée par la variable *tailleindividuLM*. Par ailleurs, l’individu 14 se distingue nettement du centre du graphique, ce qui suggère un profil atypique par rapport aux autres observations.
+
+# \textcolor{cafe}{5. Analyses descriptives pour les variables qualitatives}
+
+Comme pour les variables quantitatives, nous procédons aux analyses des variables qualitatives.
+Nous commencerons par des visualisations élémentaires (diagrammes en barres) pour chacune de ces variables. Ensuite, nous analyserons les relations entre modalités en regardant les écarts à la moyenne typé à l'aide de tableaux de contingence. Enfin, nous ferons une analyse des correspondances multiples (ACM) afin d’explorer la structure multidimensionnelle des relations entre modalités..
+
+## \textcolor{cafe}{5.1. La distribution des modalités}
+
+
+## \textcolor{cafe}{5.2. Relation d'indépendance}
+
+Dans cette partie, nous construisons un graphique représentant les écarts à l’indépendance entre les modalités des variables. Ce graphique permet d’identifier, de manière exploratoire, les associations éventuelles entre les variables qualitatives. Le script permettant de générer ce graphique est présenté en annexe.
+
+```{r , fig.cap="Moyenne et erreurs type", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
+Ecart_moy <- function(df = df_qual, nom = names(df), k = 2, l = 3){
+  
+  # Table de contingence
+  tab <- table(df[[nom[k]]], df[[nom[l]]])
+  
+  # Effectifs théoriques
+  theo <- chisq.test(tab, simulate.p.value = TRUE, B= 10000)$expected
+  
+  # Résidus de Pearson
+  ecarts <- (tab - theo) / sqrt(theo)
+  
+  # Format long
+  ec <- reshape2::melt(ecarts)
+  colnames(ec) <- c(nom[k], nom[l], "EcartZ")
+  
+  # Graphique
+  ggplot(ec, aes_string(x = nom[k], y = "EcartZ", fill = nom[l])) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    labs(
+      title = "Graphique des écarts moyens typés",
+      subtitle = paste0("Comparaison ", nom[k], " × ", nom[l]),
+      y = "Écart moyen typé (Z-score)",
+      x = nom[k]
+    ) +
+    theme_classic(base_size = 9)
+}
+```
+
+
+
+```{r , fig.cap="les écarts à l’indépendance entre num.pechejour et Site", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, warning=FALSE}
+
+Ecart_moy(df_qual, k=2, l=21)
+```
+
+
+Une valeur positive indique que la combinaison de modalités apparaît plus souvent que ce que l’on attendrait sous l’hypothèse d’indépendance.
+Une valeur négative indique au contraire que cette combinaison apparaît moins souvent que prévu.
+
+Par exemple, pour la colonne correspondant à \textit{num.pechejour = 3}, la comparaison avec \textit{Site = Acoua} (barre rose) montre un écart fortement positif, indiquant que la combinaison de ces modalités apparaît plus souvent que ce que l’on attendrait sous l’hypothèse d’indépendance.
+
+## \textcolor{cafe}{5.3. Analyse de corespondances multiples}
+
+\newpage
+# \textcolor{cafe}{6. Annexe}
+
+L'annexe B présente un tableau récapitulatif de toutes les variables quantitatives, précisant type (continues ou discrètes), leurs unités ainsi que la présence éventuelle de valeurs manquantes. 
+
+On retrouve en annexe C un tableau similaire à celui de l'annexe B, mais consacré aux variables qualitatives.
+
+## \textcolor{cafe}{6.1. Annexe A: Les fonctions codées}
+
+Dans cette annexe vous trouverez toutes les fonctions utiles programmées afin de faciliter l'analyse et le nettoyage préliminaire des données.
+
+### \textcolor{cafe}{6.1.1. plt\_hist\_uni}
+
+La fonction plt\_hist\_uni affiche un histogramme pour les variables quantitative continue et rajouter sa densité en rouge. Elle utilise 6 arguments:
+
+\begin{itemize}[label=\textbullet]
+ \item df: Un tableau contenat les variables quantitatives;
+ \item br: Sert à définir la manière dont les données seront découpées en classes dans la fonction hist;
+ \item nom : Contient tout les noms des variables présentes dans df;
+ \item Xlab : Sert à définir le titre de l'axe des x; 
+ \item cex : définit la taille du titre du graphique;
+ \item k : Permet de choisir la variable que l'on souhaite analyser.
+\end{itemize}
+
+```{r, eval=FALSE}
+# histogramme et ajout de la densite
+plt_hist_uni <- function(df, br = 20, nom = noms_quant, 
+                         xlab = "Durée (minutes)", cex = 0.9, k = 1){
+  # histograme
+  hist(df[[nom[k]]],
+     freq = F,
+     breaks = br,
+     col = "lightblue",
+     main = paste("Distribution de ",nom[k]),
+     xlab = paste(xlab), 
+     cex.main = cex)
+  
+  # la densite
+  lines(density(df[[nom[k]]], na.rm = TRUE),
+     col = "red")
+  grid()
+}
+
+```
+
+### \textcolor{cafe}{6.1.2. plt\_bar\_uni}
+
+La fonction plt\_bar\_uni renvoie un diagramme en barres pour les variables quantitatives discrètes. Elle utilise 5 arguments (df, nom, xlab, cex et k) ayant des rôles similaire à ceux de la fonction plt\_hist\_uni. 
+
+```{r, eval=FALSE}
+# barplot
+plt_bar_uni <- function(df, nom = noms_quant, 
+                        xlab = "Le nombre d'individus récoltés", 
+                        cex = 0.9, k = 1){
+    barplot(table(df[[nom[k]]]),
+     col = "lightblue",
+     main = paste("Barplot de ",nom[k]),
+     xlab = paste(xlab),
+     ylab = "Fréquence", 
+     cex.main = cex)
+  grid()
+}
+
+```
+
+### \textcolor{cafe}{6.1.3. box\_plt\_uni}
+
+La fonction box\_plt\_uni permet de représenter la distribution d’une variable quantitative à l’aide d’un boxplot. Elle permet de visualiser la médiane, quartiles et les outliers (valeurs atypiques ou aberrantes).
+
+```{r, eval=FALSE}
+# boxplot
+box_plt_uni <- function(df, nom = noms_quant, col = "orange", 
+                        cex = 0.9, k = 1){
+  boxplot(df[[nom[k]]],
+        col = col,
+        main = paste("Boxplot de ", nom[k]),
+        cex.main = cex)
+  grid()
+}
+
+```
+
+### \textcolor{cafe}{6.1.4. MAD}
+
+La fonction MAD est une estimation robuste de l'écart-type. Elle prend deux arguments, un vecteur ($x$) et un paramètre ($c$) qui sert à mettre le MAD sur la même échelle que l'écart-type pour une distribution normale.  
+
+```{r, eval=FALSE}
+# MAD (Median Absolute Deviation)
+MAD <- function(x, c= 1.483){
+  n <- length(x)
+  
+  #  vec abs(x\_i - mediane(x))
+  re <- sapply(1:n, function(i){
+    return(abs(x[i] - median(x, na.rm = T)))
+  })
+  
+  return(c*median(re, na.rm = T))
+}
+```
+
+### \textcolor{cafe}{6.1.5. Z\_rob}
+
+La fonction Z\_rob n'est rien d'autre qu'une fonction calculant un Z-score, dans laquelle  la moyenne est remplacée par la médiane et l'écart-type par son estimation robuste, le MAD.
+
+```{r, eval=FALSE}
+Z_rob <- function(x, s = MAD(x)){
+  n <- length(x)
+  
+  #  vec (x\_i - mediane(x))
+  re <- sapply(1:n, function(i){
+    return(x[i] - median(x, na.rm = T ))
+  })  
+  
+  return(re/s)
+}
+```
+
+### \textcolor{cafe}{6.1.6. detect\_outlier}
+
+La fonction detect\_outlier calcule un Z-score robuste pour une variable donnée, puis identifie les valeurs dont le Z-score absolu dépasse un seuil (par défaut 3). Elle retourne les valeurs détectées, en tenant compte des NA.
+
+```{r, eval=FALSE}
+# detection d'outliers (aberrantes, atypiques)
+detect_outlier <- function(df= df_quant, nom= noms_quant, k=1){
+  
+  # z-score robuste
+  z_rob <- Z_rob(df[[nom[k]]])
+
+  # Identifier les index des outliers
+  outliers <- which(abs(z_rob) > 3)
+   
+  # afficher les outliers
+  unique(df[[nom[k]]][outliers])
+}
+```
+
+\newpage
+## \textcolor{cafe}{6.2. Annexe B: Description des Variables quantitatives}
+
+
+\begin{table}[ht]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|p{3.5cm}|p{8cm}|c|c|c|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{Type} & \textbf{Unité} & \textbf{Valeurs manquantes} \\ \hline
+
+nbindividusrecolte & Nombre d'individus récoltés & Discrète & nombre & Oui (0.269\%) \\ \hline
+poidsrecolte & Poids total de la récolte & Continue & kg & Oui (53.763\%) \\ \hline
+tailleindividuLM & Taille individuelle (LM) & Continue & cm & Oui (12.097\%) \\ \hline
+tailleindividuLT & Taille individuelle (LT) & Continue & cm & Oui (11.022\%) \\ \hline
+poidsindividu & Poids d'un individu & Continue & g & Oui (5.108\%) \\ \hline
+heuredebut & L'heure de départ & Continue & min & Non \\ \hline
+heurefin & L'heure de la fin & Continue & min & Non \\ \hline
+coefficientmaree & Coefficient de marée & Continue & -- & Oui (21.237\%) \\ \hline
+heuremareebasse & L'heure de la basse mer & Continue & min & Non \\ \hline
+hauteurbassemer & Hauteur de basse mer & Continue & m & Non \\ \hline
+heuredebutenq & L'heure du début de l'enquête & Continue & min & Non \\ \hline
+dureeenq & Durée de l'enquête & Continue & min & Oui (13.441\%) \\ \hline
+nbhommespec & Nombre d'hommes pêchant & Discrète & nombre & Oui (29.839\%) \\ \hline
+nbfemmespec & Nombre de femmes pêchant & Discrète & nombre & Oui (70.968\%) \\ \hline
+nbenfants & Nombre d'enfants & Discrète & nombre & Oui (77.688\%) \\ \hline
+nbpecheurstotal & Nombre total de pêcheurs & Discrète & nombre & Non \\ \hline
+tempsrecolte & Temps de récolte & Continue & min & Oui (3.763\%) \\ \hline
+nbpecheursrecolte & Nombre de pêcheurs récoltant & Discrète & nombre & Non \\ \hline
+nboutilspeche & Nombre d'outils de pêche & Discrète & nombre & Oui (1.613\%) \\ \hline
+heuredebut & Durée & Continue & min & Non \\ \hline
+heurefin & Durée & Continue & min & Non \\ \hline
+duree & Durée & Continue & min & Non \\ \hline
+lat\_debut & Latitude de début & Continue & degrés & Non \\ \hline
+lon\_debut & Longitude de début & Continue & degrés & Non \\ \hline
+lat\_fin & Latitude de fin & Continue & degrés & Non \\ \hline
+lon\_fin & Longitude de fin & Continue & degrés & Non \\ \hline
+lat\_enq & Latitude de l'enquête & Continue & degrés & Oui (15.86\%) \\ \hline
+lon\_enq & Longitude de l'enquête & Continue & degrés & Oui (15.86\%) \\ \hline
+
+\end{tabular}
+}
+\caption{Tableau récapitulatif des variables quantitatives}
+\end{table}
+
+\newpage
+## \textcolor{cafe}{6.3. Annexe C: Description des Variables qualitatives}
+
+\begin{table}[H]
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|p{4.5cm}|p{8cm}|c|}
+\hline
+\textbf{Variable} & \textbf{Modalités} & \textbf{Valeurs manquantes} \\ \hline
+
+Libelle.de.sortie & 89 modalités & Non \\ \hline
+num.pechejour & 1, 2, 3, 5, 4 & Non \\ \hline
+especepechee & Poulpe de récif commun & Non \\ \hline
+outilcapture & FID4.1, FID4.2, PSM2, FIE1 & Oui (10.215\%) \\ \hline
+num.individus & 1, 2, 8, 7, 4, 5, 6, 9, 3 & Non \\ \hline
+categtailleindividu & Sup 10cm, Inf. 10cm & Oui (18.28\%) \\ \hline
+sexeindividu & Male, Femelle, Non renseigné & Oui (5.645\%) \\ \hline
+etatindividu & Vide, Entier & Oui (16.935\%) \\ \hline
+maturiteindividu & Non renseigné, Stade II & Oui (90.591\%) \\ \hline
+Type.de.suivi & Enquêtes & Non \\ \hline
+Protocole & Enquête pêche à pied & Non \\ \hline
+Version & Version 2023 & Non \\ \hline
+Etat & Validée, Terminée & Non \\ \hline
+Organisme.Createur & PNMM, Ocea Consult & Non \\ \hline
+Createur & 5 créateurs & Non \\ \hline
+Dernier.intervenant & J.Cyrielle, M.Lenaig & Non \\ \hline
+Territoire & Mayotte & Non \\ \hline
+Code.Site & 7 codes sites & Non \\ \hline
+Site & 7 sites & Non \\ \hline
+joursemaine & Lu, Ma, Me, Je, Ve, Sa, Di & Non \\ \hline
+periode & Semaine, Vacances, Week-end\_Jour.Férié & Non \\ \hline
+ramadan & Non, Oui & Oui (100\%) \\ \hline
+referentsortie & 12 référents & Oui (0.538\%) \\ \hline
+equipeterrain & 30 équipes & Oui (0.538\%) \\ \hline
+couverturenuageuse & 0–25\%, 25–75\%, 75–100\% & Oui (20.699\%) \\ \hline
+precipitations & Pas\_précipit, Pluie fine, Pluies éparses & Oui (20.699\%) \\ \hline
+forcevent & 6 modalités & Oui (0.806\%) \\ \hline
+turbidite & Claire & Non \\ \hline
+enqueteur & 12 modalités (max) & Oui (48.118\%) \\ \hline
+observations & papa ediamine & Oui (99.731\%) \\ \hline
+destinationpeche & Perso, Non renseigné, Offert & Oui (23.925\%) \\ \hline
+prixpeche & NA & Oui (100\%) \\ \hline
+connaissancequota & Non, Non renseigné, Oui & Oui (0.269\%) \\ \hline
+connaissanceregengin & Non, Non renseigné, Oui & Non \\ \hline
+connaissanceregtaillemin & Non, Non renseigné, Oui & Non \\ \hline
+connaissanceregfermeture & Non, Non renseigné, Oui & Non \\ \hline
+connaissanceregvente & Non, Non renseigné, Oui & Non \\ \hline
+paniervide & Non, Oui & Oui (0.538\%) \\ \hline
+francais & Non, Oui & Oui (13.172\%) \\ \hline
+num.pratiquejour & 1, 3, 2 & Non \\ \hline
+outilspeche & FID4.1, PSM2, LHP1, FID4.2, FIE1 & Non \\ \hline
+
+\end{tabular}
+}
+\caption{Tableau récapitulatif des variables qualitatives ayant au moin une valeur}
+\end{table}
+
+\newpage
+## \textcolor{cafe}{6.4. Annexe D: Autres visualisatons}
+
+
+```{r figure19, fig.cap="Corrélations entre les variables", fig.align='center', fig.height=4.8, fig.width=6.7, echo=FALSE, warning=FALSE}
+
+# matrice de corrélation en ignorant les NA
+cor_matrix <- cor(df_quant, use = "pairwise.complete.obs", method = "pearson")
+
+# Affichage du corrplot
+corrplot(cor_matrix, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45)  # tl.srt = rotation des labels
+
+```
+
+
+```{r figure9, fig.cap="Barplot et Boxplot du  nombre d’hommes pêchant", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, include=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_bar_uni(df_quant, xlab = "Nombre d'homme pêchant", k= 9)
+
+# boxplot
+box_plt_uni(df_quant, k= 9)
+par(mfrow = (c(1,1)))
+```
+
+
+```{r figure10, fig.cap="Barplot et Boxplot du  nombre de femme pêchant", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, include=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_bar_uni(df_quant, xlab = "Nombre de femme pêchant", k= 10)
+
+# boxplot
+box_plt_uni(df_quant, k= 10)
+par(mfrow = (c(1,1)))
+```
+
+
+```{r figure11, fig.cap="Barplot et Boxplot du  nombre d’enfant pêchant", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, include=FALSE}
+par(mfrow = (c(1,2))) 
+# barplot
+plt_bar_uni(df_quant, xlab = "Nombre d'enfant pêchant", k= 11)
+
+# boxplot
+box_plt_uni(df_quant, k= 11)
+par(mfrow = (c(1,1)))
+```
+
+
+```{r figure12, fig.cap="Barplot et Boxplot du  nombre de pêcheur total", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, include=FALSE}
+par(mfrow = (c(1,2))) 
+# barplot
+plt_bar_uni(df_quant, xlab = "Nombre de pêcheur total", k= 12)
+
+# boxplot
+box_plt_uni(df_quant, k= 12)
+par(mfrow = (c(1,1)))
+```
+
+
+```{r figure13, fig.cap="Barplot et Boxplot du  temps de récolte", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, include=FALSE}
+par(mfrow = (c(1,2))) 
+# histogramme et densite
+plt_hist_uni(df_quant, br= 15, xlab = "Temps de récolte", k= 13)
+
+# boxplot
+box_plt_uni(df_quant, k= 13)
+par(mfrow = (c(1,1)))
+```
+
+
+```{r figure14, fig.cap="Barplot et Boxplot du nombre de pêcheurs récoltant", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, include=FALSE}
+par(mfrow = (c(1,2))) 
+# barplot
+plt_bar_uni(df_quant, xlab = "Nombre de pêcheurs récoltant", k= 14)
+
+# boxplot
+box_plt_uni(df_quant, k= 14)
+par(mfrow = (c(1,1)))
+```
+
+
+```{r figure15, fig.cap="Barplot et Boxplot du  nombre d'outils de pêche", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE, include=FALSE}
+par(mfrow = (c(1,2))) 
+# barplot
+plt_bar_uni(df_quant, xlab = "Nombre d'outils de pêche", k= 15)
+
+# boxplot
+box_plt_uni(df_quant, k= 15)
+par(mfrow = (c(1,1)))
+```
+
+
+```{r, include=FALSE}
+nb_na <- function(X){
+  n <- nrow(X) # nombre d'obsrvations
+  p <- ncol(X) # nombre de variables
+  
+  # proportion de NA par variables
+  res <- sapply(1:p, function(j){
+    nb <- sum(is.na(X[,j]))
+    pr <- (nb/n)*100
+    
+    return(paste0(round(pr,3),"%"))
+  })
+  
+  return(res)
+}
+
+nb_na(df_qual)
+```
+

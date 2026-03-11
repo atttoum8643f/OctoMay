@@ -1,0 +1,260 @@
+---
+output:
+  pdf_document:
+fontsize: 12pt
+mainfont: "Times New Roman"
+
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage[table]{xcolor}
+  - \usepackage{graphicx}
+  - \usepackage{tcolorbox}
+  - \usepackage{lscape}
+  - \usepackage{booktabs}
+  - \usepackage{tikz}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[T1]{fontenc}
+  - \usepackage[french]{babel}
+  - \usepackage{amsmath,amsfonts,amssymb}
+  - \usepackage{fancyhdr}
+  - \usepackage{enumitem}
+
+  - \setlength{\headheight}{15.35403pt}
+  - \addtolength{\topmargin}{-2.5pt}
+
+  - \pagestyle{fancy}
+  - \fancyhead[L]{\textcolor{purple}{Objectif 1}}
+  - \fancyhead[C]{\textcolor{purple}{Contexte scientifique et revue bibliographique}}
+  - \fancyhead[R]{\textcolor{purple}{2025 \textbf{-} 2026}}
+  - \fancyfoot[C]{\thepage}
+
+  - \renewcommand{\contentsname}{Table des matières}
+
+  - \definecolor{bleu}{RGB}{85, 37, 130}
+  - \definecolor{navy}{RGB}{3, 34, 76}
+  - \definecolor{picker}{RGB}{235, 153, 30}
+  - \definecolor{cafe}{RGB}{70, 46, 1}
+  - \definecolor{olive}{RGB}{112, 141, 35}
+  - \definecolor{ponceau}{RGB}{198, 8, 0}
+  - \definecolor{vert}{RGB}{6, 106, 9}
+  - \definecolor{nacarat}{RGB}{252, 93, 93}
+  - \definecolor{ambre}{RGB}{240, 195, 0}
+---
+\begin{titlepage}
+\begin{center}
+
+% Logo
+\vfill
+\noindent
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=\linewidth]{vis/cufr.png}\\[2cm]
+\end{minipage}
+\hfill
+\begin{minipage}{0.26\textwidth}
+\includegraphics[width=\linewidth]{vis/imag.png}\\[2cm]
+\end{minipage}
+
+% Université et département
+{\Large \textsc{Université de Mayotte}}\\[0.cm]
+{\large \textcolor{red}{Département de Mathématiques}}\\[1.5cm]
+
+% Encadré du titre
+\tcbset{
+  colback=vert!20,
+  colframe=red,
+  width=\textwidth,
+  arc=3mm,
+  boxrule=0.8mm
+}
+
+\begin{tcolorbox}
+  \centering
+  {\huge \bfseries Sujet:  Modélisation spatio-temporelle de l’abondance des poulpes à Mayotte }\\[0.2cm]
+  {\large \textit{Objectif 1 – Contexte scientifique et revue bibliographique}}
+\end{tcolorbox}
+
+\vfill
+
+% Auteur
+\begin{flushright}
+\textbf{Réalisé par :}\\
+ATTOUMANI Ibrahim
+\end{flushright}
+
+\vfill
+
+% Logo bas de page
+\noindent
+\begin{minipage}{0.3\textwidth}
+  \includegraphics[width=\linewidth]{vis/ssd_biostat.png}
+\end{minipage}
+
+\vspace{0.5cm}
+
+{\Large Année Universitaire 2025 -- 2026}
+
+\end{center}
+\end{titlepage}
+
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+
+# \textcolor{cafe}{1. Modèle hiérarchique}
+
+Un \textcolor{navy}{modèle hiérarchique} est un modèle probabiliste dans lequel certains paramètres sont eux-mêmes considérés commes des variables aléatoires, dépendant d'hyperparamètres.
+
+## \textcolor{cafe}{1.1. Modèle d'abondance}
+
+Dans le cas d'un modèle d'abondance, nous avons:
+
+$$
+\begin{cases}
+n_{i,t} \mid N_i \sim \mathcal{B}(N_i,p_{it}) \\
+N_i \sim \mathcal{P}(\lambda_i) 
+\end{cases} \quad (n_{i,t} \rightarrow N_i \rightarrow \lambda_i)
+$$
+où :
+
+\begin{itemize}[label=\textbullet]
+\item $n_{i,t}$ est le nombre d'individus observés au site $i$ lors de la visite $t$ ;
+\item $N_i$ est le nombre réel d'individus présents dans le site $i$ ;
+\item $p_{it}$ est la probabilité de détection ;
+\item $\lambda_i$ est le paramètre d'abondance moyenne du site $i$.
+\end{itemize}
+
+Pour plus de détails, voir la Figure~\ref{fig}.
+
+\begin{figure}[h]
+\centering
+\begin{minipage}{0.65\textwidth}
+\includegraphics[width=\linewidth]{vis/schema_MH.png}
+\end{minipage}
+\caption{Schéma du modèle d'abondance}
+\label{fig}
+\end{figure}
+
+## \textcolor{cafe}{1.2. La structure du modèle}
+
+Le vrai nombre d’individus par site est inconnu (**variables latentes**), on le note :
+
+$$
+N = 
+\begin{bmatrix}
+N_1  \\
+N_2  \\
+\vdots  \\
+N_R 
+\end{bmatrix} \in \mathbb{R}^{R}
+$$
+
+où $R$ est le nombre de sites.
+
+Pour tout, $i \in {1,\dots,R}$, $N_i \sim \mathcal{P}(\lambda_i)$ (ou $N_i \sim \mathcal{BN}$).
+
+Pour chaque site $i$, le tableau $X$ ci-dessous contient les covariables environnementales:
+
+$$
+X = 
+\begin{bmatrix}
+1 & x_{1,1} & \cdots & x_{1,p} \\
+1 & x_{2,1} & \cdots & x_{2,p} \\
+\vdots  & \vdots  & \ddots & \vdots  \\
+1 & x_{R,1} & \cdots & x_{R,p} 
+\end{bmatrix} \in \mathbb{R}^{R \times (p+1)}
+$$
+
+L'abondance varie selon le site. Si $N_i \sim \mathcal{P}(\lambda_i)$, on peut modéliser l'abondance via une régression log-linéaire :
+
+$$
+\begin{aligned}
+ \log(\lambda_i) &= \beta_0 + \sum_{j=1}^p \beta_j x_{ij} \\
+\iff  \log(\lambda) &= X \beta \\
+\iff  \lambda &= \exp(X \beta)
+\end{aligned}
+$$
+avec 
+
+$$
+\beta = 
+\begin{bmatrix}
+\beta_0  \\
+\beta_1  \\
+\vdots  \\
+\beta_p 
+\end{bmatrix} \in \mathbb{R}^{p+1}
+$$
+Les données observées lors de visites répétées :
+
+$$
+Y = 
+\begin{bmatrix}
+n_{1,1} & \cdots & n_{1,T} \\
+n_{2,1} & \cdots & n_{2,T} \\
+\vdots  & \vdots  & \ddots & \vdots  \\
+n_{R,1} & \cdots & n_{R,T} 
+\end{bmatrix} \in \mathbb{R}^{R \times T}
+$$
+où $i = site_i$ et $t = temps_t$ (visite répétée). Conditionnellement à $N_i$:
+
+$$
+n_{it} \sim \mathcal{B}(N_i,p)
+$$
+
+Or, la probabilité de détéction $p$ peut dépendre également de covariables, telles que le moment de la journée, la saison ou l'observateur (humain).
+
+Pour simplifier, on considère 4 covariables :
+\begin{itemize}[label=\textbullet]
+  \item $c^1 =$ latitude
+  \item $c^2 =$ longitude
+  \item $c^3 =$ température
+  \item $c^4 =$ humidité
+\end{itemize}
+
+On note :
+
+$$
+\Delta = 
+\begin{bmatrix}
+1 & c^1_{11} & \cdots & c^q_{11} \\
+\vdots  & \vdots  & \ddots & \vdots  \\
+1 & c^1_{1T} & \cdots & c^q_{1T} \\
+1 & c^1_{22} & \cdots & c^q_{22} \\
+\vdots  & \vdots  & \ddots & \vdots  \\
+1 & c^1_{RT} & \cdots & c^q_{RT} 
+\end{bmatrix} \in \mathbb{R}^{RT \times (q+1)}
+$$
+où chaque une ligne correspond à une observation site-temps.
+
+La probabilité de détéction peut être modéliser par la fonction de lien logistique *(McCullag et Nelder 1989)*:
+
+$$
+\begin{aligned}
+\text{logit}(p_{it}) &= \alpha_0 + \sum_{j=1}^q \alpha_j c^j_{it} = \delta_{it} \\
+\iff \log\left(\frac{p_{it}}{1-p_{it}}\right) &= \delta_{it} \\
+\iff \frac{p_{it}}{1-p_{it}} &= \mathrm{e}^{\delta_{it}} \\
+\iff p_{it} &= \frac{\mathrm{e}^{\delta_{it}}}{1 + \mathrm{e}^{\delta_{it}}} \\
+\iff p_{it} &= \frac{1}{1 + \mathrm{e}^{-\delta_{it}}}
+\end{aligned}
+$$
+
+## \textcolor{cafe}{1.3. La notion de surdispersion}
+
+Soit $N_i \sim P_{\theta}$ une variable de moyenne $\mu = \mathbb{E}(N_i)$ et de variance 
+$\mathrm{Var}(N_i)$. On parle de \textcolor{navy}{surdispersion} lorsque
+
+$$
+\mathrm{Var}(N_i) > \mathrm{Var}{P_\theta}(N_i),
+$$
+c’est-à-dire, lorsque la variance observée est supérieure à la variance attendu sous le modèle $P_\theta$.
+
+Dans un modèle de poisson, $N_i \sim \mathcal{P}(\lambda_i)$, il y a surdispertion lorsque $\mathrm{Var}(N_i) > \lambda_i$. Il est alors judicieux d'utiliser un modèle altérnatives comme la loi binomiale négative, qui permet de modéliser une variance plus élevée.
+
+\newpage
+# \textcolor{cafe}{Proposition de Plan}
+

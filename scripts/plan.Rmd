@@ -1,0 +1,197 @@
+---
+output:
+  pdf_document:
+fontsize: 12pt
+mainfont: "Times New Roman"
+
+header-includes:
+  - \usepackage{xcolor}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage[table]{xcolor}
+  - \usepackage{graphicx}
+  - \usepackage{tcolorbox}
+  - \usepackage{lscape}
+  - \usepackage{booktabs}
+  - \usepackage{tikz}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[T1]{fontenc}
+  - \usepackage[french]{babel}
+  - \usepackage{amsmath,amsfonts,amssymb}
+  - \usepackage{fancyhdr}
+  - \usepackage{enumitem}
+
+  - \setlength{\headheight}{15.35403pt}
+  - \addtolength{\topmargin}{-2.5pt}
+
+  - \pagestyle{fancy}
+  - \fancyhead[L]{\textcolor{purple}{Proposition de plan}}
+  - \fancyhead[C]{\textcolor{purple}{}}
+  - \fancyhead[R]{\textcolor{purple}{2025 \textbf{-} 2026}}
+  - \fancyfoot[C]{\thepage}
+
+  - \renewcommand{\contentsname}{Table des matières}
+
+  - \definecolor{bleu}{RGB}{85, 37, 130}
+  - \definecolor{navy}{RGB}{3, 34, 76}
+  - \definecolor{picker}{RGB}{235, 153, 30}
+  - \definecolor{cafe}{RGB}{70, 46, 1}
+  - \definecolor{olive}{RGB}{112, 141, 35}
+  - \definecolor{ponceau}{RGB}{198, 8, 0}
+  - \definecolor{vert}{RGB}{6, 106, 9}
+  - \definecolor{nacarat}{RGB}{252, 93, 93}
+  - \definecolor{ambre}{RGB}{240, 195, 0}
+---
+\begin{titlepage}
+\begin{center}
+
+% Logo
+\vfill
+\noindent
+\begin{minipage}{0.3\textwidth}
+\includegraphics[width=\linewidth]{vis/cufr.png}\\[2cm]
+\end{minipage}
+\hfill
+\begin{minipage}{0.26\textwidth}
+\includegraphics[width=\linewidth]{vis/imag.png}\\[2cm]
+\end{minipage}
+
+% Université et département
+{\Large \textsc{Université de Mayotte}}\\[0.cm]
+{\large \textcolor{red}{Département de Mathématiques}}\\[1.5cm]
+
+% Encadré du titre
+\tcbset{
+  colback=vert!20,
+  colframe=red,
+  width=\textwidth,
+  arc=3mm,
+  boxrule=0.8mm
+}
+
+\begin{tcolorbox}
+  \centering
+  {\huge \bfseries Sujet:  Modélisation spatio-temporelle de l’abondance des poulpes à Mayotte }\\[0.2cm]
+  {\large \textit{Proposition de plan}}
+\end{tcolorbox}
+
+\vfill
+
+% Auteur
+\begin{flushright}
+\textbf{Réalisé par :}\\
+ATTOUMANI Ibrahim
+\end{flushright}
+
+\vfill
+
+% Logo bas de page
+\noindent
+\begin{minipage}{0.3\textwidth}
+  \includegraphics[width=\linewidth]{vis/ssd_biostat.png}
+\end{minipage}
+
+\vspace{0.5cm}
+
+{\Large Année Universitaire 2025 -- 2026}
+
+\end{center}
+\end{titlepage}
+
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+
+# \textcolor{cafe}{I- Analyses descriptives des variables quantitatives}
+
+## \textcolor{cafe}{a) Analyses univariée}
+
+\begin{itemize}[label=\textbullet]
+  \item Histogrammes (Variables continues)
+  \item Barplots (Variable discrètes)
+  \item Boxplots
+\end{itemize}
+
+## \textcolor{cafe}{b) Analyses bivariée}
+
+\begin{itemize}[label=\textbullet]
+  \item Matrice de corrélation (corrplot)
+  \item détecrtion des outliers (Z-score robuste, MAD,...)
+\end{itemize}
+
+## \textcolor{cafe}{c) Analyses multidimensionnelle}
+
+\begin{itemize}[label=\textbullet]
+  \item Analyse en composantes principales (ACP) avec imputation
+  \item détecrtion des outliers (individus loin du centre de gravité,...)
+\end{itemize}
+
+
+# \textcolor{cafe}{II- Analyses descriptives des variables qualitatives}
+
+## \textcolor{cafe}{a) Analyses univariée}
+
+\begin{itemize}[label=\textbullet]
+  \item Barplots (distribution des modalités)
+\end{itemize}
+
+## \textcolor{cafe}{b) Analyses bivariée}
+
+\begin{itemize}[label=\textbullet]
+  \item Tableau de contingence
+  \item Relation d'indépendance
+\end{itemize}
+
+## \textcolor{cafe}{c) Analyses multidimensionnelle}
+
+\begin{itemize}[label=\textbullet]
+  \item Analyse de correspondances multiples (ACM) avec imputation
+  \item détection des outliers (individus loin du centre de gravité,...)
+\end{itemize}
+
+# \textcolor{cafe}{III- COnstruction des tableaux pour la modélisation}
+
+## \textcolor{cafe}{a) Choix des covariables}
+
+\begin{itemize}[label=\textbullet]
+  \item Choisir les covariables pour la modélisation de l'abondance
+  \item Choisir les covariables pour la modélisation de le probabilité de détéction
+\end{itemize}
+
+## \textcolor{cafe}{b) Les tableaux}
+
+\begin{itemize}[label=\textbullet]
+  \item Tableau de données des individus observés durant les visite
+  \item Tableaux de covariables ($\lambda_i$, $p_{it}$)
+\end{itemize}
+
+# \textcolor{cafe}{IV- Modélisation}
+
+## \textcolor{cafe}{a) Imputations}
+
+\begin{itemize}[label=\textbullet]
+  \item Spline
+  \item Régression linéaire
+  \item ACP
+  \item missForest
+\end{itemize}
+
+## \textcolor{cafe}{b) Construction de modèles}
+
+\begin{itemize}[label=\textbullet]
+  \item Poisson
+  \item Négative Binomiale
+  \item etc...
+\end{itemize}
+
+# \textcolor{cafe}{IV- Prédictions et choix de modèles}
+
+\begin{itemize}[label=\textbullet]
+  \item Validation croisée pour chaque méthode d’imputation et chaque modèle
+  \item Prédiction
+  \item Calcule d'erreur du type RMSE
+  \item Choisir le modèle qui minimise l'erreur de prédiction
+\end{itemize}
