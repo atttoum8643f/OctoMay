@@ -49,11 +49,11 @@ header-includes:
 \vfill
 \noindent
 \begin{minipage}{0.3\textwidth}
-\includegraphics[width=\linewidth]{vis/cufr.png}\\[2cm]
+\includegraphics[width=\linewidth]{vis/logo/cufr.png}\\[2cm]
 \end{minipage}
 \hfill
 \begin{minipage}{0.26\textwidth}
-\includegraphics[width=\linewidth]{vis/imag.png}\\[2cm]
+\includegraphics[width=\linewidth]{vis/logo/imag.png}\\[2cm]
 \end{minipage}
 
 % Université et département
@@ -88,7 +88,7 @@ ATTOUMANI Ibrahim
 % Logo bas de page
 \noindent
 \begin{minipage}{0.3\textwidth}
-  \includegraphics[width=\linewidth]{vis/ssd_biostat.png}
+  \includegraphics[width=\linewidth]{vis/logo/ssd_biostat.png}
 \end{minipage}
 
 \vspace{0.5cm}
@@ -336,7 +336,7 @@ Comme on peut l'observer dans la Figure \@ref(fig:figure1),le boxplot résume la
 ```{r figure2, fig.cap="Distribution et Boxplot du poids de la récolte", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
 par(mfrow = (c(1,2))) 
 # histogramme et densite
-plt_hist_uni(df_quant, br= 15, xlab = "Poids de la récolte", k= 2)
+plt_hist_uni(df_quant, br= 15, xlab = "Le poids de la récolte", k= 2)
 
 # boxplot
 box_plt_uni(df_quant, col = "magenta", k= 2)
@@ -382,7 +382,7 @@ La distribution de la figure \@ref(fig:figure5) est asymétrique à droite. Quel
 ```{r figure6, fig.cap="Distribution et Boxplot du coefficient de la marée", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
 par(mfrow = (c(1,2))) 
 # histogramme et densite
-plt_hist_uni(df_quant, br= 15, xlab = "Coefficient marée", k= 6)
+plt_hist_uni(df_quant, br= 15, xlab = "Coefficient marée", k= 8)
 
 # boxplot
 box_plt_uni(df_quant, col = "magenta", k= 6)
@@ -394,7 +394,7 @@ Les valeurs sur la figure \@ref(fig:figure6) sont surtout entre $93$ et $112$ d'
 ```{r figure7, fig.cap="Distribution et Boxplot de la hauteur basse de la mer", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
 par(mfrow = (c(1,2))) 
 # histogramme et densite
-plt_hist_uni(df_quant, br= 15, xlab = "Hauteur basse de la mer", k= 7)
+plt_hist_uni(df_quant, br= 15, xlab = "Hauteur basse de la mer", k= 10)
 
 # boxplot
 box_plt_uni(df_quant, col = "magenta", k= 7)
@@ -406,7 +406,7 @@ On observe clairement sur la figure \@ref(fig:figure7) deux modes, ce qui suggè
 ```{r figure8, fig.cap="Distribution et Boxplot de la durée de l'enquête", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
 par(mfrow = (c(1,2))) 
 # histogramme et densite
-plt_hist_uni(df_quant, br= 15, xlab = "Durée de l'enquête", k= 8)
+plt_hist_uni(df_quant, br= 15, xlab = "Durée de l'enquête", k= 12)
 
 # boxplot
 box_plt_uni(df_quant, col = "magenta", k= 8)
@@ -420,7 +420,7 @@ Le boxplot montre une valeur atypique vers $20$, indiquant une enquête exceptio
 ```{r figure17, fig.cap="Distribution et Boxplot de la durée", fig.align='center', fig.height=3.8, fig.width=5.7, echo=FALSE}
 par(mfrow = (c(1,2))) 
 # histogramme et densite
-plt_hist_uni(df_quant, br= 15, xlab = "Durée", k= 17)
+plt_hist_uni(df_quant, br= 15, xlab = "Durée", k= 20)
 
 # boxplot
 box_plt_uni(df_quant, k= 17)
@@ -536,7 +536,6 @@ ggplot(na_df, aes(x = reorder(variable, -n_na), y = n_na)) +
 # reorder trie les bares par nombre décroissante de NA
 ```
 
-
 La figure \@ref(fig:figure10) affiche la distribution des valeurs manquantes de toutes les variables. On constate que les variables *nbenfants*, *nbfemmespec* et *poidsrecolte* ont plus de $200$ valeurs manquantes. Cela indique que ces variables sont les plus afféctées. Les autres variables présentent un nombre plus faibles de valeurs manquantes.
 
 
@@ -594,7 +593,7 @@ plot.PCA(res.PCA,
 ```{r, fig.cap="Graphe des individus dans le plan(1,2)", fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE}
 plot.PCA(res.PCA, 
          axes=c(1,2), 
-         select='cos2  0.7', 
+         select='cos2  0.65', 
          habillage='cos2', 
          title="Graphe des individus de l'ACP", 
          cex=0.9, 
@@ -603,12 +602,13 @@ plot.PCA(res.PCA,
 
 ```
 
-Sur *la figure 11* les variables les mieux représentées sont *nbenfants* et le groupe *nbfemmespec, poidsrecol...*
-L’axe 1 distingue principalement les observations selon la variable *nbenfants* en opposition avec le groupe de variables *nbfemmespec, poidsrecolte, nbindividusrecole* formant un faisceau le long de cet axe. 
+Sur *la figure 11* les variables horaires, formant le groupe 1 sont fortement corrélés à le premier axe factoriel. En opposition au groupe 1, on retrouve la variable *nbfemmespec* dans le quadrant supérieur gauche et la variable *nbenfants* dans quadrant inférieur gauche. Les variables du groupe 1 ont une direction similaire, ce qui est logique puisqu'elles mesurent presque la même chose, explicant ainsi leurs fortes corrélations.
 
-Les individus de *la figure 12* qui sont les mieux représentés sur le plan factoriel ($cos^2$ élevés) se situent majoritairement dans le quadrant supérieur gauche. Leur position indique une association positive avec la variable *nbenfants*, située dans la même direction sur le cercle des corrélations, et une opposition aux variables *nbfemmespec, poidsrecolte, nbindividusrecole* se projettent du côté droit de l’axe 1.
+La deuxième axe factoriel est principalement corrélé à la variable *poidsrecolte*.  Celle-ci semble ne pas avoir de relation avec le groupe 1. En effet, le $cos^2$ formée entre *poidsrecolte* avec le groupe 1 est proche 0.
 
-On constate également que le premier plan factoriel capture $40.83\%$ de l'inertie totale, ce qui signifie qu'il explique $40.83\%$ de la variabilité totale des données.
+Les individus de *la figure 12* qui sont les mieux représentés sur le plan factoriel ($cos^2$ élevés) se situent majoritairement dans le quadrant inférieur gauche. Leur position indique une association positive avec la variable *nbenfants*, située dans la même direction sur le cercle des corrélations. Les individus *306* et *307* se situent dans le quadrant inférieur à droit et ont une association positive avec les variables hauraires. On observe que l'idividu *10* se retrouve très loin du centre de gravité, suggérant peut-être une valeur atypique ou aberrante.
+
+On constate également que le premier plan factoriel capture $40.39\%$ de l'inertie totale, ce qui signifie qu'il explique $40.39\%$ de la variabilité totale des données.
 
 ```{r, fig.cap="Graphe des variables dans le plan(2,3)",fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE}
 plot.PCA(res.PCA,
@@ -627,7 +627,7 @@ plot.PCA(res.PCA,
 ```{r, fig.cap="Graphe des individus dans le plan(2,3)",fig.align='center', fig.height=3.8, fig.width=5.4, echo=FALSE, warning=FALSE}
 plot.PCA(res.PCA, 
          axes=c(2,3), 
-         select='cos2  0.6', 
+         select='cos2  0.65', 
          habillage='cos2', 
          title="Graphe des individus de l'ACP (2,3)", 
          cex=0.9, 
@@ -637,9 +637,9 @@ plot.PCA(res.PCA,
 
 ```
 
-On peut voir sur *la figure 13* les variables projetées sur le plan factoriel (Dim 2, Dim 3), elle met principalement en évidence deux variables. La variable *tailleindividuLM* s’oppose à *nbpecheurrecolte* selon l’axe 2, ce qui suggère que ces deux variables contribuent fortement à la construction de cet axe et qu’elles sont négativement corrélées dans ce plan factoriel.
+On peut voir sur *la figure 13* les variables projetées sur le plan factoriel (Dim 2, Dim 3), elle met principalement en évidence trois variables. La variable *poidsrecolte* ayant une corrélation positive avec les variables *nbpecheurrecolte* et *dureenq* selon l’axe 2.
 
-Le graphe des individus (*la figure 14*) dans le plan (Dim 2, Dim 3) montre que les observations sont majoritairement réparties le long de l’axe 2, indiquant que la variabilité entre individus est principalement expliquée par la variable *tailleindividuLM*. Par ailleurs, l’individu 14 se distingue nettement du centre du graphique, ce qui suggère un profil atypique par rapport aux autres observations.
+Le graphe des individus (*la figure 14*) dans le plan (Dim 2, Dim 3) montre que les observations sont majoritairement réparties dans le quadrant supérieur gauche. Ces individus sont très loin du centre de gravité, laissant penser qu'elles sont atypiques. Par ailleurs, l’individu *10* fais partie de ce groupe, renforçantt ainsi l'idée qu'il est atypique. 
 
 # \textcolor{cafe}{5. Analyses descriptives pour les variables qualitatives}
 
@@ -697,6 +697,10 @@ Une valeur négative indique au contraire que cette combinaison apparaît moins 
 Par exemple, pour la colonne correspondant à \textit{num.pechejour = 3}, la comparaison avec \textit{Site = Acoua} (barre rose) montre un écart fortement positif, indiquant que la combinaison de ces modalités apparaît plus souvent que ce que l’on attendrait sous l’hypothèse d’indépendance.
 
 ## \textcolor{cafe}{5.3. Analyse de corespondances multiples}
+
+
+
+
 
 \newpage
 # \textcolor{cafe}{6. Annexe}

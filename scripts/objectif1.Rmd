@@ -255,6 +255,3 @@ c’est-à-dire, lorsque la variance observée est supérieure à la variance at
 
 Dans un modèle de poisson, $N_i \sim \mathcal{P}(\lambda_i)$, il y a surdispertion lorsque $\mathrm{Var}(N_i) > \lambda_i$. Il est alors judicieux d'utiliser un modèle altérnatives comme la loi binomiale négative, qui permet de modéliser une variance plus élevée.
 
-\newpage
-# \textcolor{cafe}{Proposition de Plan}
-

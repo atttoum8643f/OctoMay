@@ -49,11 +49,11 @@ header-includes:
 \vfill
 \noindent
 \begin{minipage}{0.3\textwidth}
-\includegraphics[width=\linewidth]{vis/cufr.png}\\[2cm]
+\includegraphics[width=\linewidth]{vis/logo/cufr.png}\\[2cm]
 \end{minipage}
 \hfill
 \begin{minipage}{0.26\textwidth}
-\includegraphics[width=\linewidth]{vis/imag.png}\\[2cm]
+\includegraphics[width=\linewidth]{vis/logo/imag.png}\\[2cm]
 \end{minipage}
 
 % Université et département
@@ -88,7 +88,7 @@ ATTOUMANI Ibrahim
 % Logo bas de page
 \noindent
 \begin{minipage}{0.3\textwidth}
-  \includegraphics[width=\linewidth]{vis/ssd_biostat.png}
+  \includegraphics[width=\linewidth]{vis/logo/ssd_biostat.png}
 \end{minipage}
 
 \vspace{0.5cm}
