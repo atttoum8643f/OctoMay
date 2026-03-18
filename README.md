@@ -19,7 +19,7 @@ Par exemple, un modèle de mélange dynamique spatio-temporel intégrant :
   - Des covariables sociales et économiques;
   - Des relations non-linéaires entre ces covariables.
 
-Enfin, les outils méthodologique qui seront développés les résultats obtenus seront exploités pour la gestion durable des ressources aquatiques à Mayotte.
+Enfin, les outils méthodologique qui seront développés et les résultats obtenus seront exploités pour la gestion durable des ressources aquatiques à Mayotte.
 
 ## L'arborescence provisoir
 
@@ -31,6 +31,7 @@ Enfin, les outils méthodologique qui seront développés les résultats obtenus
 ├── scripts/
 ├── notes/
 ├── archive/
+├── autres_fichiers/
 └── vis/
     └── logo/
 ```
@@ -46,7 +47,9 @@ Enfin, les outils méthodologique qui seront développés les résultats obtenus
 
   - notes/ : contient les documents PDF générés à partir des fichiers R Markdown.
 
-  - archive/ : contient les anciens documents, fichiers et figures
+  - archive/ : contient les anciens documents, fichiers et figures.
+  
+  - autres_fichiers/ : contient des fichiers complémentaires.
 
   - vis/ : contient les éléments visuels utilisés dans le projet.
 
