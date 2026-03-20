@@ -1,89 +1,79 @@
-R <- 10 # nombres de sites
-L <- 9 # nombres de repetition
-n <- 100 # Observations
+library(dplyr)
+library(tidyr)
 
+# -------- parametres --------
 
-# modalites
+R <- 10
+L <- 9
+
+ste <- c("Boueni","Aeroport","Mtsangamouji","Mtsangamboi","Mtsangadoua",
+         "Sada","Acoua","Sohoa","nyambadao","Mtsapere")
+
+date_rep <- c("02/2025","03/2025","04/2025","05/2025","06/2025",
+              "07/2025","08/2025","09/2025","10/2025")
+
 turbid <- c("claire","sale")
 period <- c("semaine","week-end","vacance")
 eta <- c("vide","terminer")
 precipit <- c("PP","PF","PE") 
-fv <- c("moins2_1km","entre_1&5km","entre_6&11km","entre_12&19km",
-        "entre_20&28km")
-ste <- c("Boueni","Aeroport","Mtsangamouji","Mtsangamboi","Mtsangadoua","Sada",
-         "Acoua","Sohoa","nyambadao","Mtsapere")
+fv <- c("moins2_1km","entre_1&5km","entre_6&11km","entre_12&19km","entre_20&28km")
 
-prob_ste <- c(0.17, 0.13, 0.09, 0.06, 0.10, 0.15, 0.06, 0.08, 0.09,0.07)
+# -------- structure site x date --------
 
+data_simul <- expand.grid(site = ste, date = date_rep)
+n <- nrow(data_simul)
 
-# date
-date_rep <- c("02/2025","03/2025","04/2025","05/2025","06/2025",
-              "07/2025","08/2025","09/2025","10/2025")
+set.seed(808)
 
-prob_dte <- c(0.17, 0.13, 0.09, 0.06, 0.10, 0.15, 0.06, 0.08, 0.16)
+# -------- covariables --------
 
+data_simul$turbidite <- sample(turbid, n, replace = TRUE)
+data_simul$periode <- sample(period, n, replace = TRUE)
+data_simul$etat <- sample(eta, n, replace = TRUE)
+data_simul$precipitation <- sample(precipit, n, replace = TRUE)
+data_simul$forcevent <- sample(fv, n, replace = TRUE)
 
-# Identifiants
-ID <- paste0("Id",1:n)
+data_simul$coefficientmaree <- runif(n, 20, 120)
+data_simul$hauteurbassemer <- runif(n, 0.5, 3)
+data_simul$temperature <- rnorm(n, 27, 2)
 
+# -------- abondance (niveau site) --------
 
+cov_site <- data.frame(
+  site = ste,
+  turbidite_site = sample(turbid, R, replace = TRUE)
+)
 
-# Simulation
-set.seed(0808)
-site <- sample(ste,n, replace = TRUE, prob = prob_ste)
-date <- sample(date_rep,n, replace = TRUE, prob = prob_dte)
+data_simul <- left_join(data_simul, cov_site, by = "site")
 
-# dataframe
-data_simul <- data.frame(ID=ID, site=site, date=date)
+lambda_site <- exp(1 +
+                     0.5 * (cov_site$turbidite_site == "sale") +
+                     rnorm(R, 0, 0.3))
 
-data_simul$turbidite <- sample(turbid,n, replace = TRUE, prob = c(0.399,0.601))
-data_simul$periode <- sample(period,n, replace = TRUE, prob = c(0.5,0.32,0.18))
-data_simul$etat <- sample(eta,n, replace = TRUE, prob = c(0.478,0.522))
-data_simul$precipitation <- sample(precipit,n, replace = TRUE, prob = c(0.45,0.38,0.17))
-data_simul$forcevent <- sample(fv,n, replace = TRUE, prob = c(0.12,0.21,0.17,0.24,0.26))
+N_site <- rpois(R, lambda_site)
 
+data_simul$N <- N_site[match(data_simul$site, ste)]
 
+# -------- detection (niveau visite) --------
 
-# Variables quantitatives 
-set.seed(0808)
-data_simul$hauteurbasseme <- runif(n, 0.5, 3)        # hauteur marée (m)
-data_simul$coefficientmaree <- runif(n, 20, 120)     # coefficient marée
-data_simul$temperature <- rnorm(n, 27, 2)            # température (°C)
-data_simul$lat <- runif(n, -13.1, -12.6)             # latitude (Mayotte)
-data_simul$lon <- runif(n, 45.0, 45.3)               # longitude (Mayotte)
-
-
-#  ------------- Modele d'abondance --------------
-
-# Lambda dépend de certaines variables
-lambda <- exp(1 +
-                0.3 * (data_simul$turbidite == "sale") +
-                0.2 * (data_simul$periode == "vacance") -
-                0.01 * data_simul$coefficientmaree +
-                0.05 * data_simul$temperature)
-
-# Abondance réelle
-N <- rpois(n, lambda)
-
-
-#  ------------- Modele de detection --------------
-
-# Probabilité de détection
 p <- plogis(-0.5 +
               0.4 * (data_simul$etat == "terminer") -
               0.3 * (data_simul$precipitation == "PP") +
-              0.2 * (data_simul$forcevent == "moins2_1km"))
+              0.2 * (data_simul$forcevent == "moins2_1km") +
+              0.01 * data_simul$temp)
 
-# Abondance observée
-data_simul$nbindividus <- rbinom(n, size = N, prob = p)
+# -------- observations --------
 
+data_simul$nbindividus <- rbinom(n,
+                                 size = data_simul$N,
+                                 prob = p)
 
-#  ------------- Creation du tableau de donnee --------------
+# -------- tableau final --------
 
-Y  <- data_simul %>%
+Y <- data_simul %>%
   pivot_wider(
     id_cols = site,
     names_from = date,
     values_from = nbindividus,
-    values_fn = sum
+    values_fill = 0
   )
