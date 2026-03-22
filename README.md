@@ -29,32 +29,38 @@ Enfin, les outils méthodologique qui seront développés et les résultats obte
 ├── README.md
 ├── data/
 ├── scripts/
+│ ├── Rmd/
+│ └── data_simule.R
 ├── notes/
+│ ├── Objectifs/
+│ └── plan/
 ├── archive/
 ├── autres_fichiers/
-└── vis/
-    └── logo/
+├── vis/
+│ ├── schema_MH.png
+│ ├── Sortie_Ter/
+│ └── logo/
+.
 ```
-### Description
 
-  - LICENSE : licence du projet.
+### Description des dossiers
 
-  - README.md : description du projet et instructions pour reproduire les analyses.
-
-  - data/ : Les données étant confidentielles, elles ne sont pas versionnées dans le dépôt.
-
-  - scripts/ : contient les fichiers R Markdown utilisés pour réaliser les analyses et générer les documents.
-
-  - notes/ : contient les documents PDF générés à partir des fichiers R Markdown.
-
-  - archive/ : contient les anciens documents, fichiers et figures.
+- LICENSE : licence du projet.  
+- README.md : description du projet et instructions pour reproduire les analyses.  
+- data/ : données utilisées pour le projet. Les données confidentielles ne sont pas versionnées.  
+- scripts/ : fichiers R et R Markdown pour réaliser les analyses et générer les documents.  
+  - Rmd/ : fichiers R Markdown.  
+  - data_simule.R : script pour générer des données simulées.  
+- notes/ : documents PDF générés à partir des fichiers R Markdown.  
+  - Objectifs/ : documents liés aux objectifs du projet.  
+  - plan/ : documents relatifs au plan de travail.  
+- archive/ : anciens documents, fichiers et figures.  
+- autres_fichiers/ : fichiers complémentaires ou ressources diverses.  
+- vis/ : éléments visuels utilisés dans le projet.  
+  - Sortie_Ter/ : images et figures liées aux sorties terrain.  
+  - logo/ : logos utilisés dans les documents.  
+  - schema_MH.png : schéma général du projet.
   
-  - autres_fichiers/ : contient des fichiers complémentaires.
-
-  - vis/ : contient les éléments visuels utilisés dans le projet.
-
-  - logo/ : logos utilisés dans les documents.
-
 ## Sortie terrain – 19 et 20 mars 2026
 
 Le 19 mars, nous avons réalisé une sortie terrain à Sohoa pour observer les pratiques de pêche et enquêter sur la connaissance de la réglementation par les pêcheurs.  
