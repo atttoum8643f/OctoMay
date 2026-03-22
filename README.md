@@ -1,4 +1,4 @@
-# Contexte
+  # Contexte
 
 Le lagon de Mayotte est confronté à des problèmes anthropique depuis le $XXI^{ème} siècle$. 
 Ces contraintes conduisent à la dégradation des écosystèmes locaux, menaçant ainsi les ressources exploitées.
@@ -54,3 +54,11 @@ Enfin, les outils méthodologique qui seront développés et les résultats obte
   - vis/ : contient les éléments visuels utilisés dans le projet.
 
   - logo/ : logos utilisés dans les documents.
+
+## Sortie terrain – 19 et 20 mars 2026
+
+Le 19 mars, nous avons réalisé une sortie terrain à Sohoa pour observer les pratiques de pêche et enquêter sur la connaissance de la réglementation par les pêcheurs.  
+
+![Poulpe et coquillage](vis/Sortie_Ter/coq_plp.jpeg)
+
+Le 20 mars, la sortie prévue n’a pas pu avoir lieu à cause d’un accident sur la route de Tsingoni. Les gendarmes sur place nous ont demandé de faire demi-tour.
