@@ -1,0 +1,179 @@
+
+```{r, fig.align='center', fig.height=5.4, fig.width=7.7, echo=FALSE, warning=FALSE}
+# Les packages nécessaires pour la création de carte
+library(lubridate)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(viridis)
+library(ggspatial)
+library(geodata)
+library(elevatr)
+library(raster)
+
+# importation des données
+# Attention: il faut penser à changer le chemin vers les données si nécessaire
+
+dt <- read.csv("data/Octopus_data.csv", header = TRUE, sep = ",")
+vals <- c(6,7,8,9,10,12)
+
+
+
+# Conversion en date/heure
+
+# Colonnes avec date + heure
+dt$Date.de.creation <- dmy_hms(dt$Date.de.creation)  
+dt$Date.de.modification <- dmy_hms(dt$Date.de.modification)
+
+# dmy_hms -> date-mois-annee heure:minute:seconde
+
+# Colonne avec date seulement
+dt$datesortie <- ymd(dt$datesortie)
+
+# convertir toutes les heure en minutes
+col_heures <- c("heuredebut", "heurefin", "heuremareebasse", "heuredebutenq")
+
+# charactereq -> heures
+df <- dt %>%
+  mutate(across(all_of(col_heures), hm))
+
+# heures -> minutes
+df <- df %>%
+  mutate(across(all_of(col_heures), ~
+                  as.numeric(.x, "minutes")))
+
+
+# les noms des coordonees gps
+gps <- c("gpsdebut", "gpsfin", "gpsenq")
+
+for (i in 1:3) {
+  vec <- c("debut", "fin", "enq")
+  latlong <- do.call(rbind, strsplit(df[[gps[i]]], ","))  # sépare les valeurs
+  
+  df[[paste0("lat_",vec[i])]] <- as.numeric(latlong[,1])
+  df[[paste0("lon_",vec[i])]] <- as.numeric(latlong[,2])
+}
+
+df <- df[,!names(df) %in% gps]
+
+
+# Carte de Mayotte
+adm_Mayotte <- gadm(country = "MYT", level = 0, path = tempdir())
+adm_Mayotte_sf <- st_as_sf(adm_Mayotte)
+
+
+dem <- get_elev_raster(adm_Mayotte_sf, z = 10)  # SRTM (~30 m)
+dem_masked <- mask(dem, as(adm_Mayotte_sf, "Spatial"))  # Masquer l'extérieur
+
+
+
+# Générer hillshade (ombrage)
+slope  <- terrain(dem_masked, opt = "slope")
+aspect <- terrain(dem_masked, opt = "aspect")
+hill   <- hillShade(slope, aspect, angle = 40, direction = 315)
+
+
+# Convertir en data.frame pour ggplot
+hill_df <- as.data.frame(hill, xy = TRUE)
+colnames(hill_df) <- c("Longitude","Latitude","shade")
+hill_df <- hill_df[!is.na(hill_df$shade), ]  # supprimer NA (hors île)
+
+
+data_site <- df %>%
+   group_by(Site) %>%
+   summarise(
+     abondance = sum(nbpecheurstotal, na.rm = TRUE),
+     latitude = mean(lat_debut, na.rm = TRUE),
+     longitude = mean(lon_debut, na.rm = TRUE),
+     .groups = "drop"
+   )
+ 
+
+ # Convertir en objet sf
+ sites_sf <- st_as_sf(
+   data_site,
+   coords = c("longitude", "latitude"),
+   crs = 4326
+ )
+
+ 
+ 
+# --- Carte ---
+ggplot() +
+
+  # Fond blanc (extérieur)
+  geom_rect(
+    aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf),
+    fill = "white"
+  ) +
+
+  # Relief hillshade avec dégradé marron → vert
+  geom_raster(
+    data = hill_df,
+    aes(x = Longitude, y = Latitude, fill = shade),
+    alpha = 0.7
+  ) +
+  scale_fill_gradientn(
+    colors = c("#8B4513","#A0522D","#FF4901","#4CA66B","#7CFC00"), 
+    guide = "none"
+  ) +
+
+  # Contour de l'île
+  geom_sf(
+    data = adm_Mayotte_sf,
+    fill = NA,
+    color = "grey35",
+    size = 0.5
+  ) +
+
+  # Sites avec couleur et taille selon abondance
+  geom_sf(
+    data = sites_sf,
+    aes(color = abondance, size = abondance)
+  ) +
+
+  # Noms des sites
+  geom_text_repel(
+    data = data_site,
+    aes(x = longitude, y = latitude, label = Site),
+    size = 3
+  ) +
+
+  # Palette viridis pour les sites
+  scale_color_viridis_c(option = "C", name = "nombre de pêcheurs à pied") +
+
+  # Supprimer la légende de taille
+  guides(size = "none") +
+
+  # Boussole et échelle
+  annotation_north_arrow(
+    location = "tr", which_north = "true",
+    style = north_arrow_fancy_orienteering(
+      fill = c("white","grey70"),
+      line_col = "grey30",
+      text_size = 9,
+      text_face = "bold"
+    )
+  ) +
+  annotation_scale(
+    location = "br", width_hint = 0.2,
+    line_width = 0.8,
+    text_cex = 0.75,
+    text_face = "bold",
+    bar_cols = c("grey45","grey80")
+  ) +
+
+  # Titre
+  labs(title = "Nombre total de pêcheurs") +
+
+  # Thème minimaliste
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 16),
+    legend.position = "right"
+  )
+```
+
+
