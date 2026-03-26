@@ -116,3 +116,78 @@ Y <- data_simul %>%
     values_fill = list(nbindividus = 0)
   )
 
+# --- Carte ggplot avec relief marron-vert ---
+ggplot() +
+
+  # Fond blanc (extérieur)
+  geom_rect(
+    aes(xmin = -Inf, xmax = Inf, ymin = -Inf, ymax = Inf),
+    fill = "white"
+  ) +
+
+  # Relief hillshade avec dégradé marron → vert
+  geom_raster(
+    data = hill_df,
+    aes(x = Longitude, y = Latitude, fill = shade),
+    alpha = 0.7
+  ) +
+  scale_fill_gradientn(
+    colors = c("#8B4513","#A0522D","#955628","#4CA66B","#7CFC00"), # marron foncé → vert clair
+    guide = "none"
+  ) +
+
+  # Contour de l'île
+  geom_sf(
+    data = adm_Mayotte_sf,
+    fill = NA,
+    color = "grey35",
+    size = 0.5
+  ) +
+
+  # Sites avec couleur et taille selon abondance
+  geom_sf(
+    data = sites_sf,
+    aes(color = abondance, size = abondance)
+  ) +
+
+  # Noms des sites
+  geom_text_repel(
+    data = data_site,
+    aes(x = longitude, y = latitude, label = Site),
+    size = 3
+  ) +
+
+  # Palette viridis pour les sites
+  scale_color_viridis_c(option = "C", name = "pêcheurs") +
+
+  # Supprimer la légende de taille
+  guides(size = "none") +
+
+  # Boussole et échelle
+  annotation_north_arrow(
+    location = "tr", which_north = "true",
+    style = north_arrow_fancy_orienteering(
+      fill = c("white","grey70"),
+      line_col = "grey30",
+      text_size = 9,
+      text_face = "bold"
+    )
+  ) +
+  annotation_scale(
+    location = "br", width_hint = 0.2,
+    line_width = 0.8,
+    text_cex = 0.75,
+    text_face = "bold",
+    bar_cols = c("grey45","grey80")
+  ) +
+
+  # Titre
+  labs(title = "Nombre total de pêcheurs") +
+
+  # Thème minimaliste
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 16),
+    legend.position = "right"
+  )
